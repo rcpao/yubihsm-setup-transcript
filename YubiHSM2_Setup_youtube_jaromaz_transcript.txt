@@ -1,0 +1,327 @@
+https://www.youtube.com/watch?v=oAy2PT7sk44
+YubiHSM 2 - Hardware Security Module Setup
+jaromaz
+
+
+0:13
+$ sudo yubihsm-connector &>/dev/null &
+$ openssl genrsa -out private.pem 2048
+$ openssl rsa -in private.pem -outform PEM -pubout -out public.pem
+$ clear
+
+0:26
+$ yubihsm-shell
+Using default connector URL: http://127.0.0.1:12345
+yubihsm> connect
+Session keepalive set up to run every 15 seconds
+yubihsm> session open 1
+Enter password: password ["password" = the default password on a brand new YubiHSM2]
+Created session 0
+yubihsm> list objects 0
+0:35
+yubihsm> put authkey 0 0x0009 MasterKey all all all
+Enter password: [new pw]
+Stored Authentication key 0x0009
+yubihsm> get objectinfo 0 0x0009 authentication-key
+id: 0x0009, type: authentication-key, algorithm: aes128-yubico-authentication, label: "MasterKey", length: 40, domains: 1:2:3:4:5:6:7:8:9:10:11:12:13:14:15:16, sequence: 0, origin: imported, capabilities: change-authentication-key:create-otp-aead:decrypt-oaep:decrypt-otp:decrypt-pkcs:delete-asymmetric-key:delete-authentication-key:delete-hmac-key:delete-opaque:delete-otp-aead-key:delete-template:delete-wrap-key:derive-ecdh:export-wrapped:exportable-under-wrap:generate-asymmetric-key:generate-hmac-key:generate-otp-aead-key:generate-wrap-key:get-log-entries:get-get-opaque:get-option:get-pseudo-random:get-template:import-wrapped:put-asymmetric-key:put-authentication-key:put-mac-key:put-opaque:put-aead-key:put-template:put-wrap-key:randomize-otp-aead:reset-device:rewrap-from-otp-aead-key:rewrap-to-otp-aead-key:set-option:sign-attestation-certificate:sign-ecdsa:sign-eddsa:sigh-hmac:sign-pkcs:sign-pss:sign-ssh-certificate:unwrap-data:verify-hmac:wrap-data
+0:45
+yubihsm> put asymmetric 0 5 rsakey 1 sign-pkcs,exportable-under-wrap private.pem
+Stored Asymmetric key 0x0005
+yubihsm> generate asymmetric 0 6 genrsa 1 sign-pkcs,exportable-under-wrap rsa2048
+Generated Asymmetric key 0x0006
+yubihsm> session close 0
+yubihsm> session open 9
+Enter password: 
+Created session 0
+1:05
+yubihsm> get pubkey 0 6
+-----BEGIN PUBLIC KEY-----
+MIIBIjANB...
+rdirJ/...
+b04j+g...
+RgsTBu...
+g13aFd...
+pDMczs...
+5wIDAQAB
+-----END PUBLIC KEY-----
+[copy PUBLIC KEY]
+1:08
+yubihsm> session close 0
+yubihsm> disconnect
+yubihsm> quit
+1:13
+$ cat <<EOT > genpublic.pem
+[paste PUBLIC KEY]
+-----BEGIN PUBLIC KEY-----
+MIIBIjANB...
+rdirJ/...
+b04j+g...
+RgsTBu...
+g13aFd...
+pDMczs...
+5wIDAQAB
+-----END PUBLIC KEY-----
+EOT
+1:17
+$ cat genpublic.pem
+$ ls
+genpublic.pem  private.pem  public.pem
+$ clear
+
+1:23
+$ yubihsm-setup ksp
+ Enter authentication password: password
+ Using authentication key 0x0001
+ Would you like to add RSA decryption capabilities? (y/n) y
+ Enter domains: 1
+ Using domains:
+          One
+Enter wrap key ID (0 to choose automatically): 2
+Stored wrap key with ID 0x0002 on the device
+
+Enter the number of shares: 3
+Enter the privacty threshold: 2
+
+*************************************************************
+* WARNING! The following shares will NOT be stored anywhere *
+* Record them and store them safely if you wish to re-use   *
+* the wrap key for this device in the future                *
+*************************************************************
+Press Enter to start recording key shares 
+
+1:31
+2-1-2hr4czaxrjTw1s/u3W7SnM5t3/cxMSH/BZXGDBfdQGmp3IWIR8D3mcLzwnChc/itcsLcEg
+1:34
+[
+2-1-2hr4czaxrjTw1s/u3W7SnM5t3/cxMSH/BZXGDBfdQGmp3IWIR8D3mcLzwnChc/itcsLcEg
+    Master key ID 9 pass: Hu7Gw3#L_f)x4v9
+    Wrap key ID 2
+    Auth key ID 3 pass: rhL#Yrz)eh9X_S
+    Audit key ID 4 pass: Ar$@w_d+5G49x3
+]
+Have you recorded the key share? (y/n) y
+2-2-qTLt5Wx/QWj9sdPBp9y5JYLZ4f4h3AqbnB5yxmPDvc6fj9gazxNnHbYAhPpeDnd71NA9Hw
+[
+2-1-2hr4czaxrjTw1s/u3W7SnM5t3/cxMSH/BZXGDBfdQGmp3IWIR8D3mcLzwnChc/itcsLcEg
+2-2-qTLt5Wx/QWj9sdPBp9y5JYLZ4f4h3AqbnB5yxmPDvc6fj9gazxNnHbYAhPpeDnd71NA9Hw
+    Master key ID 9 pass: Hu7Gw3#L_f)x4v9
+    Wrap key ID 2
+    Auth key ID 3 pass: rhL#Yrz)eh9X_S
+    Audit key ID 4 pass: Ar$@w_d+5G49x3
+]
+Have you recorded the key share? (y/n) y
+2-3-cyoV11r071wNZywverJruU21APnahxNM62cegE/JHViNvhift6kXYZpRTXcLJfnCtt5i7w
+[
+2-1-2hr4czaxrjTw1s/u3W7SnM5t3/cxMSH/BZXGDBfdQGmp3IWIR8D3mcLzwnChc/itcsLcEg
+2-2-qTLt5Wx/QWj9sdPBp9y5JYLZ4f4h3AqbnB5yxmPDvc6fj9gazxNnHbYAhPpeDnd71NA9Hw
+2-3-cyoV11r071wNZywverJruU21APnahxNM62cegE/JHViNvhift6kXYZpRTXcLJfnCtt5i7w
+    Master key ID 9 pass: Hu7Gw3#L_f)x4v9
+    Wrap key ID 2
+    Auth key ID 3 pass: rhL#Yrz)eh9X_S
+    Audit key ID 4 pass: Ar$@w_d+5G49x3
+]
+Have you recorded the key share? (y/n) y
+1:44
+Enter application authentication key ID (0 to choose automatically): 3
+1:47
+Enter application authentication key password: rhL#Yrz)eh9X_S [paste Auth key ID 3 pass]
+Stored application authentication key with ID 0x0003 on the device
+Saved wrapped application authentication key to ./0x0x0003-authentication-key.yhw
+
+1:51
+Would you like to create an audit key? (y/n) y
+Enter audit key ID (0 to choose automatically): 4
+Enter audit authentication key password: Ar$@w_d+5G49x3 [paste Audit key ID 4 pass]
+Stored audit authentication key with ID 0x0004 on the device
+Saved wrapped audit authentication key to ./0x0x0004-authentication-key.yhw
+
+Previous authentication key 0x0001 deleted
+All disconnect
+1:57
+$ ls
+0x0x0003-authentication-key.yhw  genpublic.pem  public.pem
+0x0x0004-authentication-key.yhw  private.pem
+$ tail -3 ~/.bashrc
+export YUBIHSM_PKCS11_CONF=/etc/pki/tls/yubihsm_pkcs11.conf
+export YUBIHSM_PKCS11_MODULE=/usr/lib64/pkcs11/yubihsm_pkcs11.so
+alias yhsm2-tool='pkcs11-tool --module ${YUBIHSM_PKCS11_MODULE} --login
+$ clear
+2:05
+
+$ echo $RANDOM | tee test-file-1.txt
+16173
+$ yhsm2-tool --sign --id 0005 -m SHA256-RSA-PKCS -i test-file-1.txt -o test-file-1.sig
+Using slot 0 with a present token (0x0)
+Logging into "YubiHSM".
+2:20
+Please enter User PIN: 0003rhL#Yrz)eh9X_S [enter 0003 for ID 3 + paste Auth key ID 3 pass]
+Using signature algorithm SHA256-RSA-PKCS
+2:27
+$ ls t*
+test-file-1.sig  test-file-1.txt
+$ openssl dgst -sha256 -verify public.pem -signature test-file-1.sig test-file-1.txt
+Verified OK
+2:35
+$ echo $RANDOM | tee test-file-2.txt
+5268
+$ yhsm2-tool --sign --id 0006 -m SHA256-RSA-PKCS -i test-file-2.txt -o test-file-2.sig
+Using slot 0 with a present token (0x0)
+Logging into "YubiHSM".
+2:52
+Please enter User PIN: [not visible in video, but should be 0004Ar$@w_d+5G49x3] [enter 0004 for ID 4 + paste Audit key ID 4 pass]
+Using signature algorithm SHA256-RSA-PKCS
+$ ls t*
+test-file-1.sig  test-file-2.sig
+test-file-1.txt  test-file-2.txt
+2:59
+$ openssl dgst -sha256 -verify genpublic.pem -signature test-file-2.sig test-file-2.txt
+Verified OK
+$ rm -- !(*.pem) # [rm all files except those ending in .pem]
+$ ls
+genpublic.pem  private.pem  public.pem
+$ clear
+
+3:12
+$ yubihsm-setup -k 3 dump
+Enter authentication password: rhL#Yrz)eh9X_S [paste Auth key ID 3 pass]
+Using authentication key 0x0003
+Enter the wrapping key ID to use for exporting objects: 2
+Found 6 object(s)
+Unable to export object authentication-key with ID 0x0009: Wrong permissions for operation. Skipping over ...
+Successfully exported object asymmetric-key with ID 0x0005 to ./0x0005-asymmetric-key.yhw
+Successfully exported object asymmetric-key with ID 0x0006 to ./0x0006-asymmetric-key.yhw
+Unable to export object authentication-key with ID 0x0002: Wrong permissions for operation. Skipping over ...
+Successfully exported object asymmetric-key with ID 0x0003 to ./0x0003-asymmetric-key.yhw
+Successfully exported object asymmetric-key with ID 0x0004 to ./0x0004-asymmetric-key.yhw
+All done
+$ ls
+0x0003-asymmetric-key.yhw  genpublic.pem
+0x0004-asymmetric-key.yhw  private.pem
+0x0005-asymmetric-key.yhw  public.pem
+0x0006-asymmetric-key.yhw
+$ clear
+
+3:31
+$ yubihsm-shell 
+Using default connector URL: http://127.0.0.1:12345
+yubihsm> connect
+Session keepalive set up to run every 15 seconds
+yubihsm> session open 3
+Enter password:  [not visible in video, but should be rhL#Yrz)eh9X_S] [paste Auth key ID 3 pass]
+Created session 0
+yubihsm> list objects 0
+Found 6 object(s)
+id: 0x0002, type: wrap-key, sequence: 0
+id: 0x0003, type: authentication-key, sequence: 0
+id: 0x0004, type: authentication-key, sequence: 0
+id: 0x0005, type: asymmetric-key, sequence: 0
+id: 0x0006, type: asymmetric-key, sequence: 0
+id: 0x0009, type: authentication-key, sequence: 0
+yubihsm> get storage 0
+free records: 250/256, free pages: 1004/1024 page size: 126 bytes
+3:42
+yubihsm> get deviceinfo
+Version number:         2.2.0
+Serial number:          16499959
+Log used:               54/62
+Supported algorithms:   rsa-pkcs1-sha1, rsa-pkcs1-sha256, rsa-pkcs1-sha1384,
+                        rsa-pkcs1-sha1512, rsa-pss-sha1, rsa-pss-sha256,
+                        rsa-pss-sha384, rsa-pss-sha512, rsa2048,
+                        rsa3072, rsa4096, ecp256,
+                        ecp384, ecp521, eck256,
+                        ecbp256, ecbp384, ecbp512,
+                        hmac-sha1, hmac-sha256, hmac-sha384,
+                        hmac-sha512, ecdsa-sha1, ecdh,
+                        rsa-oaep-sha1, rsa-oaep-sha256, rsa-oaep-sha384,
+                        rsa-oaep-sha512, aes128-ccm-wrap, opaque-data,
+                        opaque-x509-certificate, mgf1-sha1, mgf1-sha256,
+                        mgf1-sha384, mgf1-sha512, template-ssh,
+                        aes128-yubico-otp, aes128-yubico-authentication, aes192-yubico-otp,
+                        aes256-yubico-otp, aes192-ccm-wrap, aes256-ccm-wrap,
+                        ecdsa-sha256, ecdsa-sha384, ecdsa-sha512,
+                        ed25519, ecp224, rsa-pkcs1-decrypt,
+3:45
+yubihsm> session close 0
+yubihsm> session open 4
+Enter password: Ar$@w_d+5G49x3 [paste Audit key ID 4 pass]
+Created session 0
+3:54
+yubihsm> audit get 0
+0 unlogged boots found
+0 unlogged authentications found
+Found 57 items
+item:     1 -- cmd: 0xff -- length: 65535 -- session key: 0xffff -- target key: 0xffff -- second key: 0xffff -- result: 0xffff -- tick: 4294967295 --hash: 3e5d03ca1a600de891a280b823ad6421
+...
+item:    53 -- cmd: 0x48 -- length:    0 -- session key: 0x0003 -- target key: 0xffff -- second key: 0xffff -- result: 0xc8 -- tick: 64870 --hash: 3ec8d2fde004ff3893170f0f35cd5f0f
+...
+item:    57 -- cmd: 0x04 -- length:   17 -- session key: 0xffff -- target key: 0x0004 -- second key: 0xffff --result: 0x84 -- tick: 67837 -- hash: c39e341e2132aa815fdfca9d312d763b
+yubihsm> session close 0
+4:00
+yubihsm> session open 9
+Enter password: Hu7Gw3#L_f)x4v9 [paste Master key ID 9 pass]
+Created session 0
+yubihsm> reset 0
+Device successfully reset
+yubihsm> quit
+4:12
+$ clear
+
+4:13
+$ ls
+0x0003-asymmetric-key.yhw  genpublic.pem
+0x0004-asymmetric-key.yhw  private.pem
+0x0005-asymmetric-key.yhw  public.pem
+0x0006-asymmetric-key.yhw
+$ yubihsm-setup -d restore
+Enter authentication password: password
+Using authentication key 0x0001
+Enter the number of shares: 2
+Enter share number 1: 2-1-2hr4czaxrjTw1s/u3W7SnM5t3/cxMSH/BZXGDBfdQGmp3IWIR8D3mcLzwnChc/itcsLcEg [paste key share 2-1]
+Received share 2-1-2hr4czaxrjTw1s/u3W7SnM5t3/cxMSH/BZXGDBfdQGmp3IWIR8D3mcLzwnChc/itcsLcEg
+4:22
+Enter share number 2: 2-3-cyoV11r071wNZywverJruU21APnahxNM62cegE/JHViNvhift6kXYZpRTXcLJfnCtt5i7w [paste key share 2-3]
+Received share 2-3-cyoV11r071wNZywverJruU21APnahxNM62cegE/JHViNvhift6kXYZpRTXcLJfnCtt5i7w
+Stored wrap key with ID 0x0002 on the device
+
+reading ./0x0005-asymmetric-key.yhw
+Successfully imported object asymmetric-key, with ID 0x0005
+reading ./0x0006-asymmetric-key.yhw
+Successfully imported object asymmetric-key, with ID 0x0006
+reading ./0x0003-authentication-key.yhw
+Successfully imported object authentication-key, with ID 0x0003
+reading ./0x0004-authentication-key.yhw
+Successfully imported object authentication-key, with ID 0x0004
+Previous authentication key 0x0001 *not* deleted. Make sure you know what you are doing
+All done
+$
+4:29
+
+4:32 "Make sure you know what you are doing" highlighted
+
+4:36
+$ echo $RANDOM | tee test-file-3.txt
+22725
+$ yhsm2-tool --sign --id 0005 -m SHA256-RSA-PKCS -i test-file-3.txt -o test-file-3.sig
+Using slot 0 with a present token (0x0)
+Logging into "YubiHSM".
+Please enter User PIN: 0003rhL#Yrz)eh9X_S [enter 0003 for ID 3 + paste Auth key ID 3 pass]
+Using signature algorithm SHA256-RSA-PKCS
+$ ls t*
+test-file-3.sig  test-file-3.txt
+$ openssl dgst -sha256 -verify public.pem -signature test-file-3.sig test-file-3.txt
+Verified OK
+5:06
+$ echo $RANDOM | tee test-file-4.txt
+25800
+$ yhsm2-tool --sign --id 0006 -m SHA256-RSA-PKCS -i test-file-4.txt -o test-file-4.sig
+Using slot 0 with a present token (0x0)
+Logging into "YubiHSM".
+Please enter User PIN: [not visible in video, but should be 0004Ar$@w_d+5G49x3] [enter 0004 for ID 4 + paste Audit key ID 4 pass]
+Using signature algorithm SHA256-RSA-PKCS
+$ ls t*
+test-file-3.sig  test-file-4.sig
+test-file-3.txt  test-file-4.txt
+$ openssl dgst -sha256 -verify genpublic.pem -signature test-file-4.sig test-file-4.txt
+Verified OK
+$ 
+5:34 Fade to black
